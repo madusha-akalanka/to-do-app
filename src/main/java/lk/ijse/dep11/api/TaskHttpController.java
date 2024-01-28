@@ -14,7 +14,7 @@ import java.util.List;
 
 
 @RestController
-@RequestMapping("/tasks")
+@RequestMapping("/api/v1/tasks")
 public class TaskHttpController {
     private final HikariDataSource pool;
     public  TaskHttpController(){
@@ -89,6 +89,27 @@ public class TaskHttpController {
             pstm.execute();
 
 
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    @DeleteMapping(value="/{id}")
+    public void deleteTask(@PathVariable("id") int taskId){
+        try (Connection connection = pool.getConnection()) {
+
+
+            PreparedStatement pstm = connection.prepareStatement("SELECT  * FROM task WHERE id=?");
+            pstm.setInt(1,taskId);
+
+            if(!pstm.executeQuery().next()){
+                throw new ResponseStatusException(HttpStatus.NOT_FOUND,"Task Not Found");
+            }
+
+            PreparedStatement stm = connection.prepareStatement("DELETE FROM task WHERE id=?");
+            stm.setInt(1,taskId);
+            stm.executeUpdate();
         } catch (SQLException e) {
             throw new RuntimeException(e);
         }
